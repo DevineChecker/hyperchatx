@@ -126,7 +126,7 @@ const Index = () => {
       await streamGroqChat({
         apiKey,
         model,
-        messages: newMessages,
+        messages: apiMessages,
         onDelta: upsert,
         onDone: () => setIsLoading(false),
         signal: controller.signal,
