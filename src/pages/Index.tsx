@@ -86,7 +86,11 @@ const Index = () => {
 
     const userMsg: Message = { role: "user", content: input.trim() };
     const currentChat = chats.find((c) => c.id === chatId);
-    const newMessages = [...(currentChat?.messages || []), userMsg];
+    const systemMsg: Message = {
+      role: "system",
+      content: "When writing mathematical expressions, always use LaTeX notation with proper delimiters. Use $...$ for inline math and $$...$$ for display/block math. For example: $f(x) = 2x^3 - 15x^2 + 36x + 1$, or for block equations:\n$$f(1) = 2(1)^3 - 15(1)^2 + 36(1) + 1 = 24$$\nAlways wrap ALL math expressions in these delimiters, including simple ones like $x = 2$."
+    };
+    const newMessages = [systemMsg, ...(currentChat?.messages || []), userMsg];
 
     updateChatMessages(chatId, newMessages);
     setInput("");
