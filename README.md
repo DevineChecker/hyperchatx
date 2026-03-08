@@ -62,7 +62,21 @@ This project is built with:
 
 ## How can I deploy this project?
 
+### Option 1: Lovable Publish
+
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+
+### Option 2: Cloudflare Pages
+
+1. Connect your GitHub repo to [Cloudflare Pages](https://dash.cloudflare.com/).
+2. Configure build settings:
+   - **Build command:** `npm run build`
+   - **Output directory:** `dist`
+   - **Deploy command:** *(leave empty)*
+3. Set environment variable: `NODE_VERSION` = `20`
+4. Deploy — Cloudflare will build and serve the `dist` folder automatically.
+
+> **Note:** Do not use `npx wrangler deploy` as the deploy command. Cloudflare Pages handles deployment automatically from the build output.
 
 ## Can I connect a custom domain to my Lovable project?
 
