@@ -16,6 +16,14 @@ function preprocessLatex(content: string): string {
 
 export function ChatMessage({ message }: { message: Message }) {
   const isUser = message.role === "user";
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(message.content);
+    setCopied(true);
+    toast.success("Copied to clipboard!");
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className={`flex gap-3 py-4 px-4 ${isUser ? "" : "bg-card/50"}`}>
@@ -30,16 +38,36 @@ export function ChatMessage({ message }: { message: Message }) {
           <Bot className="w-4 h-4 text-primary" />
         )}
       </div>
-      <div className="flex-1 min-w-0 prose-chat text-foreground text-[0.935rem]">
-        {isUser ? (
-          <p className="whitespace-pre-wrap">{message.content}</p>
-        ) : (
-          <ReactMarkdown
-            remarkPlugins={[remarkMath]}
-            rehypePlugins={[rehypeKatex]}
+      <div className="flex-1 min-w-0">
+        <div className="prose-chat text-foreground text-[0.935rem]">
+          {isUser ? (
+            <p className="whitespace-pre-wrap">{message.content}</p>
+          ) : (
+            <ReactMarkdown
+              remarkPlugins={[remarkMath]}
+              rehypePlugins={[rehypeKatex]}
+            >
+              {preprocessLatex(message.content)}
+            </ReactMarkdown>
+          )}
+        </div>
+        {!isUser && (
+          <button
+            onClick={handleCopy}
+            className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
-            {preprocessLatex(message.content)}
-          </ReactMarkdown>
+            {copied ? (
+              <>
+                <Check className="w-3.5 h-3.5" />
+                Copied
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5" />
+                Copy
+              </>
+            )}
+          </button>
         )}
       </div>
     </div>
