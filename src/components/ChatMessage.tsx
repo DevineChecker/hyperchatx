@@ -2,19 +2,34 @@ import ReactMarkdown from "react-markdown";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
-import { Bot, User, Copy, Check } from "lucide-react";
+import { Bot, User, Copy, Check, RotateCcw, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { Message } from "@/lib/groq";
+import { GROQ_MODELS } from "@/lib/groq";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-// Preprocess LaTeX delimiters: \[...\] → $$...$$ and \(...\) → $...$
 function preprocessLatex(content: string): string {
   content = content.replace(/\\\[([\s\S]*?)\\\]/g, (_, inner) => `$$${inner}$$`);
   content = content.replace(/\\\(([\s\S]*?)\\\)/g, (_, inner) => `$${inner}$`);
   return content;
 }
 
-export function ChatMessage({ message }: { message: Message }) {
+interface ChatMessageProps {
+  message: Message;
+  index: number;
+  onRollback?: (index: number) => void;
+  onRegenerate?: (index: number, model: string) => void;
+  currentModel?: string;
+}
+
+export function ChatMessage({ message, index, onRollback, onRegenerate, currentModel }: ChatMessageProps) {
   const isUser = message.role === "user";
   const [copied, setCopied] = useState(false);
 
@@ -39,24 +54,6 @@ export function ChatMessage({ message }: { message: Message }) {
         )}
       </div>
       <div className="flex-1 min-w-0">
-        {!isUser && (
-          <button
-            onClick={handleCopy}
-            className="mb-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          >
-            {copied ? (
-              <>
-                <Check className="w-3.5 h-3.5" />
-                Copied
-              </>
-            ) : (
-              <>
-                <Copy className="w-3.5 h-3.5" />
-                Copy
-              </>
-            )}
-          </button>
-        )}
         <div className="prose-chat text-foreground text-[0.935rem]">
           {isUser ? (
             <p className="whitespace-pre-wrap">{message.content}</p>
@@ -67,6 +64,63 @@ export function ChatMessage({ message }: { message: Message }) {
             >
               {preprocessLatex(message.content)}
             </ReactMarkdown>
+          )}
+        </div>
+        {/* Action buttons */}
+        <div className="flex items-center gap-2 mt-2 flex-wrap">
+          {!isUser && (
+            <button
+              onClick={handleCopy}
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3.5 h-3.5" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5" />
+                  Copy
+                </>
+              )}
+            </button>
+          )}
+          {onRollback && (
+            <button
+              onClick={() => onRollback(index)}
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              title="Rollback to this message (remove all messages after)"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              Rollback
+            </button>
+          )}
+          {!isUser && onRegenerate && currentModel && (
+            <div className="inline-flex items-center gap-1.5">
+              <button
+                onClick={() => onRegenerate(index, currentModel)}
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                title="Regenerate with current model"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                Regenerate
+              </button>
+              <Select
+                onValueChange={(model) => onRegenerate(index, model)}
+              >
+                <SelectTrigger className="h-6 w-auto min-w-[120px] text-xs bg-secondary border-border text-muted-foreground px-2 py-0">
+                  <SelectValue placeholder="Change model" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border">
+                  {GROQ_MODELS.map((m) => (
+                    <SelectItem key={m.id} value={m.id} className="text-xs focus:bg-secondary">
+                      {m.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           )}
         </div>
       </div>

@@ -73,6 +73,75 @@ const Index = () => {
     }
   };
 
+  const handleRollback = (messageIndex: number) => {
+    if (!activeChatId) return;
+    setChats((prev) =>
+      prev.map((c) => {
+        if (c.id !== activeChatId) return c;
+        const msgs = c.messages.slice(0, messageIndex + 1);
+        return { ...c, messages: msgs, title: getChatTitle(msgs), updatedAt: Date.now() };
+      })
+    );
+    toast.success("Rolled back conversation");
+  };
+
+  const handleRegenerate = useCallback(async (messageIndex: number, regenerateModel: string) => {
+    if (!activeChatId || isLoading) return;
+    const chat = chats.find((c) => c.id === activeChatId);
+    if (!chat) return;
+
+    // Keep messages up to (but not including) the assistant message at messageIndex
+    const msgsBeforeAssistant = chat.messages.slice(0, messageIndex);
+    
+    const systemMsg: Message = {
+      role: "system",
+      content: "When writing mathematical expressions, always use LaTeX notation with proper delimiters. Use $...$ for inline math and $$...$$ for display/block math. For example: $f(x) = 2x^3 - 15x^2 + 36x + 1$, or for block equations:\n$$f(1) = 2(1)^3 - 15(1)^2 + 36(1) + 1 = 24$$\nAlways wrap ALL math expressions in these delimiters, including simple ones like $x = 2$."
+    };
+    const apiMessages = [systemMsg, ...msgsBeforeAssistant];
+
+    // Reset to messages before the assistant response
+    updateChatMessages(activeChatId, msgsBeforeAssistant);
+    setIsLoading(true);
+
+    let assistantContent = "";
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const chatId = activeChatId;
+
+    const upsert = (chunk: string) => {
+      assistantContent += chunk;
+      setChats((prev) =>
+        prev.map((c) => {
+          if (c.id !== chatId) return c;
+          const msgs = [...msgsBeforeAssistant];
+          const last = msgs[msgs.length - 1];
+          if (last?.role === "assistant") {
+            msgs[msgs.length - 1] = { ...last, content: assistantContent };
+          } else {
+            msgs.push({ role: "assistant", content: assistantContent });
+          }
+          return { ...c, messages: msgs, title: getChatTitle(msgs), updatedAt: Date.now() };
+        })
+      );
+    };
+
+    try {
+      await streamGroqChat({
+        apiKey,
+        model: regenerateModel,
+        messages: apiMessages,
+        onDelta: upsert,
+        onDone: () => setIsLoading(false),
+        signal: controller.signal,
+      });
+    } catch (e: any) {
+      if (e.name !== "AbortError") {
+        toast.error(e.message || "Failed to get response");
+      }
+      setIsLoading(false);
+    }
+  }, [activeChatId, chats, apiKey, isLoading]);
+
   const handleSend = useCallback(async () => {
     if (!input.trim() || isLoading) return;
 
@@ -199,7 +268,7 @@ const Index = () => {
             ) : (
               <div className="max-w-3xl mx-auto">
                 {messages.map((m, i) => (
-                  <ChatMessage key={i} message={m} />
+                  <ChatMessage key={i} message={m} index={i} onRollback={handleRollback} onRegenerate={handleRegenerate} currentModel={model} />
                 ))}
                 {isLoading && messages[messages.length - 1]?.role === "user" && <TypingIndicator />}
               </div>
