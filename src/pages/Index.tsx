@@ -90,9 +90,10 @@ const Index = () => {
       role: "system",
       content: "When writing mathematical expressions, always use LaTeX notation with proper delimiters. Use $...$ for inline math and $$...$$ for display/block math. For example: $f(x) = 2x^3 - 15x^2 + 36x + 1$, or for block equations:\n$$f(1) = 2(1)^3 - 15(1)^2 + 36(1) + 1 = 24$$\nAlways wrap ALL math expressions in these delimiters, including simple ones like $x = 2$."
     };
-    const newMessages = [systemMsg, ...(currentChat?.messages || []), userMsg];
+    const chatMessages = [...(currentChat?.messages || []), userMsg];
+    const apiMessages = [systemMsg, ...chatMessages];
 
-    updateChatMessages(chatId, newMessages);
+    updateChatMessages(chatId, chatMessages);
     setInput("");
     setIsLoading(true);
 
