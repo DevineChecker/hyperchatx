@@ -39,22 +39,10 @@ export function ChatMessage({ message }: { message: Message }) {
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="prose-chat text-foreground text-[0.935rem]">
-          {isUser ? (
-            <p className="whitespace-pre-wrap">{message.content}</p>
-          ) : (
-            <ReactMarkdown
-              remarkPlugins={[remarkMath]}
-              rehypePlugins={[rehypeKatex]}
-            >
-              {preprocessLatex(message.content)}
-            </ReactMarkdown>
-          )}
-        </div>
         {!isUser && (
           <button
             onClick={handleCopy}
-            className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="mb-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             {copied ? (
               <>
@@ -69,6 +57,18 @@ export function ChatMessage({ message }: { message: Message }) {
             )}
           </button>
         )}
+        <div className="prose-chat text-foreground text-[0.935rem]">
+          {isUser ? (
+            <p className="whitespace-pre-wrap">{message.content}</p>
+          ) : (
+            <ReactMarkdown
+              remarkPlugins={[remarkMath]}
+              rehypePlugins={[rehypeKatex]}
+            >
+              {preprocessLatex(message.content)}
+            </ReactMarkdown>
+          )}
+        </div>
       </div>
     </div>
   );
