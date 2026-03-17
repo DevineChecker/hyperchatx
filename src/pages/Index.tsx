@@ -20,7 +20,7 @@ const Index = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
   const abortRef = useRef<AbortController | null>(null);
 
   const activeChat = chats.find((c) => c.id === activeChatId) || null;
