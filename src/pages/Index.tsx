@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Send } from "lucide-react";
 import { ChatMessage, TypingIndicator } from "@/components/ChatMessage";
+import { ChatInput, type Attachment } from "@/components/ChatInput";
 import { ModelSelector } from "@/components/ModelSelector";
 import { ApiKeyInput } from "@/components/ApiKeyInput";
 import { ChatSidebar } from "@/components/ChatSidebar";
