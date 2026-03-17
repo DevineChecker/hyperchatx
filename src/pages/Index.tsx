@@ -272,27 +272,18 @@ const Index = () => {
           </div>
 
           {/* Input */}
-          <div className="border-t border-border bg-card/50 backdrop-blur-sm p-4">
-            <div className="max-w-3xl mx-auto flex gap-2 items-end">
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={handleTextareaInput}
-                onKeyDown={handleKeyDown}
-                placeholder="Send a message..."
-                rows={1}
-                className="flex-1 resize-none bg-secondary border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
-              />
-              <Button
-                onClick={handleSend}
-                disabled={!input.trim() || isLoading}
-                size="icon"
-                className="h-11 w-11 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 flex-shrink-0"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+          <ChatInput
+            input={input}
+            onInputChange={setInput}
+            onSend={handleSend}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            isLoading={isLoading}
+          />
         </div>
       </div>
     </SidebarProvider>
