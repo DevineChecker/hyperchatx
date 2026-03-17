@@ -217,19 +217,6 @@ const Index = () => {
     }
   }, [input, isLoading, activeChatId, chats, apiKey, model]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
-    const el = e.target;
-    el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 160) + "px";
-  };
 
   if (!apiKey) return <ApiKeyInput onSave={handleSaveKey} />;
 
