@@ -1,14 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Send } from "lucide-react";
+import { toast } from "sonner";
 import { ChatMessage, TypingIndicator } from "@/components/ChatMessage";
+import { ChatInput, type Attachment } from "@/components/ChatInput";
 import { ModelSelector } from "@/components/ModelSelector";
 import { ApiKeyInput } from "@/components/ApiKeyInput";
 import { ChatSidebar } from "@/components/ChatSidebar";
 import { streamGroqChat, type Message } from "@/lib/groq";
 import { loadChats, saveChats, createChat, getChatTitle, type Chat } from "@/lib/chatHistory";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { toast } from "sonner";
 
 const Index = () => {
   const [apiKey, setApiKey] = useState(() => localStorage.getItem("groq_api_key") || "");
@@ -21,7 +20,7 @@ const Index = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
   const abortRef = useRef<AbortController | null>(null);
 
   const activeChat = chats.find((c) => c.id === activeChatId) || null;
@@ -142,8 +141,9 @@ const Index = () => {
     }
   }, [activeChatId, chats, apiKey, isLoading]);
 
-  const handleSend = useCallback(async () => {
-    if (!input.trim() || isLoading) return;
+  const handleSend = useCallback(async (attachments: Attachment[] = []) => {
+    if (!input.trim() && attachments.length === 0) return;
+    if (isLoading) return;
 
     let chatId = activeChatId;
     if (!chatId) {
@@ -153,7 +153,15 @@ const Index = () => {
       chatId = chat.id;
     }
 
-    const userMsg: Message = { role: "user", content: input.trim() };
+    // Build user message content with attachment info
+    let userContent = input.trim();
+    if (attachments.length > 0) {
+      const fileNames = attachments.map((a) => a.file.name).join(", ");
+      const prefix = `[Attached: ${fileNames}]\n`;
+      userContent = prefix + userContent;
+    }
+
+    const userMsg: Message = { role: "user", content: userContent };
     const currentChat = chats.find((c) => c.id === chatId);
     const systemMsg: Message = {
       role: "system",
@@ -166,9 +174,6 @@ const Index = () => {
     setInput("");
     setIsLoading(true);
 
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
 
     let assistantContent = "";
     const controller = new AbortController();
@@ -208,19 +213,6 @@ const Index = () => {
     }
   }, [input, isLoading, activeChatId, chats, apiKey, model]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
-  const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
-    const el = e.target;
-    el.style.height = "auto";
-    el.style.height = Math.min(el.scrollHeight, 160) + "px";
-  };
 
   if (!apiKey) return <ApiKeyInput onSave={handleSaveKey} />;
 
@@ -276,27 +268,18 @@ const Index = () => {
           </div>
 
           {/* Input */}
-          <div className="border-t border-border bg-card/50 backdrop-blur-sm p-4">
-            <div className="max-w-3xl mx-auto flex gap-2 items-end">
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={handleTextareaInput}
-                onKeyDown={handleKeyDown}
-                placeholder="Send a message..."
-                rows={1}
-                className="flex-1 resize-none bg-secondary border border-border rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
-              />
-              <Button
-                onClick={handleSend}
-                disabled={!input.trim() || isLoading}
-                size="icon"
-                className="h-11 w-11 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 flex-shrink-0"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+          <ChatInput
+            input={input}
+            onInputChange={setInput}
+            onSend={handleSend}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            isLoading={isLoading}
+          />
         </div>
       </div>
     </SidebarProvider>
