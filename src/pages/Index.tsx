@@ -174,9 +174,6 @@ const Index = () => {
     setInput("");
     setIsLoading(true);
 
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
 
     let assistantContent = "";
     const controller = new AbortController();
