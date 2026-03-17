@@ -142,8 +142,9 @@ const Index = () => {
     }
   }, [activeChatId, chats, apiKey, isLoading]);
 
-  const handleSend = useCallback(async () => {
-    if (!input.trim() || isLoading) return;
+  const handleSend = useCallback(async (attachments: Attachment[] = []) => {
+    if (!input.trim() && attachments.length === 0) return;
+    if (isLoading) return;
 
     let chatId = activeChatId;
     if (!chatId) {
@@ -153,7 +154,15 @@ const Index = () => {
       chatId = chat.id;
     }
 
-    const userMsg: Message = { role: "user", content: input.trim() };
+    // Build user message content with attachment info
+    let userContent = input.trim();
+    if (attachments.length > 0) {
+      const fileNames = attachments.map((a) => a.file.name).join(", ");
+      const prefix = `[Attached: ${fileNames}]\n`;
+      userContent = prefix + userContent;
+    }
+
+    const userMsg: Message = { role: "user", content: userContent };
     const currentChat = chats.find((c) => c.id === chatId);
     const systemMsg: Message = {
       role: "system",
