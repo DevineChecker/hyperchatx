@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { ChatMessage, TypingIndicator } from "@/components/ChatMessage";
 import { ChatInput, type Attachment } from "@/components/ChatInput";
 import { ModelSelector } from "@/components/ModelSelector";
