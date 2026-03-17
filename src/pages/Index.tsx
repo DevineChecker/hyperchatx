@@ -8,7 +8,6 @@ import { ChatSidebar } from "@/components/ChatSidebar";
 import { streamGroqChat, type Message } from "@/lib/groq";
 import { loadChats, saveChats, createChat, getChatTitle, type Chat } from "@/lib/chatHistory";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { toast } from "sonner";
 
 const Index = () => {
   const [apiKey, setApiKey] = useState(() => localStorage.getItem("groq_api_key") || "");
